@@ -36,6 +36,8 @@ app.use('/msme',product_router);
 app.use('/msme',credit_router);
 app.use('/msme',sales_router);
 app.use('/api/v1/ml', ml_routes);
+
+app.get('/',(req,res)=>{res.send("API RUNNING")})
 console.log('Connecting to:', process.env.connection_string); // add this
 
 mongoose.connect(process.env.connection_string,{
@@ -45,4 +47,6 @@ mongoose.connect(process.env.connection_string,{
     console.log('connection succeeded with database')}).catch((error)=>console.log('db error occured',error.message))
 
 
-app.listen(process.env.PORT,()=>console.log('server connected on the port-> ',process.env.PORT));
+const PORT = process.env.PORT  || 10000
+
+app.listen(PORT,()=>console.log('server connected on the port-> ',process.env.PORT));
