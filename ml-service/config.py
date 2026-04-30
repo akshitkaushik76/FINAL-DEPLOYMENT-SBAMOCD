@@ -3,8 +3,11 @@ import os
 
 load_dotenv()
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-DB_NAME   = os.getenv("DB_NAME", "l_msme_operations")
+MONGO_URI = os.getenv("MONGO_URI")
+DB_NAME   = os.getenv("DB_NAME", "msme-db")
+
+if not MONGO_URI:
+    raise ValueError("MONGODB ENVIRONMENT IS NOT SET")
 
 COLLECTIONS = {
     "sales":   "productsaletransactions",
