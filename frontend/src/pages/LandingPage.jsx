@@ -441,7 +441,7 @@ const styles = `
   }
 `;
 
-const API_BASE = "http://localhost:9500/msme";
+ const API_BASE = import.meta.env.VITE_API_BASE;
 
 export default function LandingPage() {
   const navigate = useNavigate();

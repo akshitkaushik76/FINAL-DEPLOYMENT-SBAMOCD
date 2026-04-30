@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API = "http://localhost:9500/msme";
+const API = import.meta.env.VITE_API_BASE
 
 const authHeader = () => ({
     "Content-Type": "application/json",

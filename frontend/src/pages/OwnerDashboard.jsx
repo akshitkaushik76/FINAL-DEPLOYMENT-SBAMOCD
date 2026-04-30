@@ -216,8 +216,8 @@ tr:hover td{background:var(--surface2);}
 `;
 
 /* ─────────────────────────── CONFIG ─────────────────────────── */
-const API = "http://localhost:9500/msme";
-const   ml = "http://localhost:9500/api/v1/ml";
+const API = import.meta.env.VITE_API_BASE
+const   ml = import.meta.env.VITE_ML_API
 
 const authHeader = () => ({
   "Content-Type": "application/json",
