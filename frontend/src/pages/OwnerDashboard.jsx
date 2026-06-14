@@ -768,28 +768,484 @@ function Branches({ owner, selectedBranch }) {
 /* 3. PRODUCTS, 4. SALES, 5. CREDITS, 6. ML remain unchanged for brevity */
 /* (They are already correct in your original code) */
 
-function Products({ selectedBranch }) {
-  const [alert, show] = useAlert();
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("view");
-  const [products, setProducts] = useState([]);
-  const [result, setResult] = useState(null);
+// function Products({ selectedBranch }) {
+//   const [alert, show] = useAlert();
+//   const [loading, setLoading] = useState(false);
+//   const [activeTab, setActiveTab] = useState("view");
+//   const [products, setProducts] = useState([]);
+//   const [result, setResult] = useState(null);
 
+//   const [addForm, setAddForm] = useState({
+//     product_name: "", cost_price: "", selling_price: "", quantity: ""
+//   });
+//   const [updateForm, setUpdateForm] = useState({
+//     product_code: "", quantity: "", selling_price: "", cost_price: ""
+//   });
+
+//   const upd = (form, setForm) => (k, v) => setForm(f => ({ ...f, [k]: v }));
+//   const updAdd = upd(addForm, setAddForm);
+//   const updUpd = upd(updateForm, setUpdateForm);
+
+//   // Fetch all products for selected branch
+//   const fetchProducts = async () => {
+//     if (!selectedBranch?._id) { show("error", "No branch selected"); return; }
+//     setLoading(true);
+//     try {
+//       const r = await fetch(
+//         `${API}/get-products/${selectedBranch._id}`,
+//         { headers: authHeader() }
+//       );
+//       const d = await r.json();
+//       if (!r.ok) throw new Error(d.message);
+//       setProducts(d?.products || d?.data || []);
+//     } catch (e) {
+//       // If no get-products endpoint, show empty
+//       setProducts([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     if (activeTab === "view" && selectedBranch?._id) fetchProducts();
+//   }, [activeTab, selectedBranch]);
+
+//   const addProduct = async () => {
+//     if (!selectedBranch?._id) { show("error", "No branch selected"); return; }
+//     const { product_name, cost_price, selling_price, quantity } = addForm;
+//     if (!product_name || !cost_price || !selling_price || !quantity) {
+//       show("error", "All fields are required"); return;
+//     }
+//     setLoading(true);
+//     try {
+//       const r = await fetch(
+//         `${API}/add-product/${selectedBranch._id}`,
+//         {
+//           method: "POST",
+//           headers: authHeader(),
+//           body: JSON.stringify({
+//             product_name,
+//             cost_price: Number(cost_price),
+//             selling_price: Number(selling_price),
+//             quantity: Number(quantity),
+//           }),
+//         }
+//       );
+//       const d = await r.json();
+//       if (!r.ok) throw new Error(d.message);
+//       show("success", `Product "${product_name}" added successfully!`);
+//       setResult(d?.product_data || d);
+//       setAddForm({ product_name: "", cost_price: "", selling_price: "", quantity: "" });
+//       fetchProducts();
+//     } catch (e) {
+//       show("error", e.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const updateProduct = async () => {
+//     if (!selectedBranch?._id) { show("error", "No branch selected"); return; }
+//     if (!updateForm.product_code) { show("error", "Product code is required"); return; }
+//     setLoading(true);
+//     try {
+//       const body = {};
+//       if (updateForm.quantity)     body.quantity      = Number(updateForm.quantity);
+//       if (updateForm.selling_price) body.selling_price = Number(updateForm.selling_price);
+//       if (updateForm.cost_price)   body.cost_price    = Number(updateForm.cost_price);
+
+//       const r = await fetch(
+//         `${API}/update-product/${selectedBranch._id}/${updateForm.product_code}`,
+//         { method: "PATCH", headers: authHeader(), body: JSON.stringify(body) }
+//       );
+//       const d = await r.json();
+//       if (!r.ok) throw new Error(d.message);
+//       show("success", "Product updated successfully!");
+//       setResult(d?.updated_data || d);
+//       fetchProducts();
+//     } catch (e) {
+//       show("error", e.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const tabs = [
+//     { key: "view",   label: "All Products" },
+//     { key: "add",    label: "Add Product"  },
+//     { key: "update", label: "Update Stock" },
+//   ];
+
+//   // Context strip
+//   const ContextStrip = () => (
+//     <div style={{ display:"flex", gap:"10px", marginBottom:"1rem", flexWrap:"wrap" }}>
+//       {selectedBranch && (
+//         <span className="badge badge-accent">
+//           ◆ {selectedBranch.branch_name} · {selectedBranch.branch_code}
+//         </span>
+//       )}
+//     </div>
+//   );
+
+//   // Profit margin helper
+//   const margin = (cost, sell) => {
+//     if (!cost || !sell || sell === 0) return "—";
+//     return `${(((sell - cost) / sell) * 100).toFixed(1)}%`;
+//   };
+
+//   // Stock level badge
+//   const stockBadge = (qty) => {
+//     if (qty <= 0)  return <span className="badge badge-danger">Out of stock</span>;
+//     if (qty <= 10) return <span className="badge badge-warning">Low</span>;
+//     return <span className="badge badge-success">In stock</span>;
+//   };
+
+//   return (
+//     <div>
+//       <Alert alert={alert} />
+//       <div className="pill-tabs">
+//         {tabs.map(t => (
+//           <button
+//             key={t.key}
+//             className={`pill${activeTab === t.key ? " active" : ""}`}
+//             onClick={() => { setActiveTab(t.key); setResult(null); }}
+//           >
+//             {t.label}
+//           </button>
+//         ))}
+//       </div>
+
+//       {/* ── VIEW ALL PRODUCTS ── */}
+//       {activeTab === "view" && (
+//         <div>
+//           <ContextStrip />
+//           <div style={{ display:"flex", justifyContent:"space-between",
+//                         alignItems:"center", marginBottom:"1rem" }}>
+//             <div className="stat-label">
+//               {products.length} product{products.length !== 1 ? "s" : ""} in branch
+//             </div>
+//             <button className="btn btn-ghost btn-sm" onClick={fetchProducts} disabled={loading}>
+//               {loading ? <Spinner /> : "↻"} Refresh
+//             </button>
+//           </div>
+
+//           {loading ? (
+//             <div className="empty"><Spinner /> Loading products...</div>
+//           ) : products.length > 0 ? (
+//             <div className="tbl-wrap">
+//               <table>
+//                 <thead>
+//                   <tr>
+//                     <th>Product</th>
+//                     <th>Code</th>
+//                     <th>Cost Price</th>
+//                     <th>Selling Price</th>
+//                     <th>Margin</th>
+//                     <th>Quantity</th>
+//                     <th>Status</th>
+//                     <th>Added</th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {products.map((p, i) => (
+//                     <tr key={i}>
+//                       <td style={{ fontWeight:500 }}>{p.product_name}</td>
+//                       <td className="mono" style={{ color:"var(--muted)" }}>
+//                         {p.product_code}
+//                       </td>
+//                       <td className="mono">₹{Number(p.cost_price).toLocaleString("en-IN")}</td>
+//                       <td className="mono" style={{ color:"var(--accent)" }}>
+//                         ₹{Number(p.selling_price).toLocaleString("en-IN")}
+//                       </td>
+//                       <td className="mono" style={{ color:"var(--success)" }}>
+//                         {margin(p.cost_price, p.selling_price)}
+//                       </td>
+//                       <td className="mono">{p.quantity}</td>
+//                       <td>{stockBadge(p.quantity)}</td>
+//                       <td style={{ color:"var(--muted)", fontSize:"0.78rem" }}>
+//                         {p.inclusion_date || "—"}
+//                       </td>
+//                     </tr>
+//                   ))}
+//                 </tbody>
+//               </table>
+//             </div>
+//           ) : (
+//             <div className="empty">
+//               <div className="empty-icon">📦</div>
+//               No products found for this branch.
+//               <div style={{ fontSize:"0.75rem", marginTop:"8px", color:"var(--faint)" }}>
+//                 Add your first product using the "Add Product" tab.
+//               </div>
+//             </div>
+//           )}
+//         </div>
+//       )}
+
+//       {/* ── ADD PRODUCT ── */}
+//       {activeTab === "add" && (
+//         <div className="card">
+//           <ContextStrip />
+//           {!selectedBranch ? (
+//             <div className="alert alert-warning">⚠ No branch selected.</div>
+//           ) : (
+//             <>
+//               <div className="form-grid">
+//                 <div className="field">
+//                   <label>Product Name</label>
+//                   <input
+//                     placeholder="e.g. Maggi Noodles"
+//                     value={addForm.product_name}
+//                     onChange={e => updAdd("product_name", e.target.value)}
+//                   />
+//                 </div>
+//                 <div className="field">
+//                   <label>Quantity</label>
+//                   <input
+//                     type="number" min="1" placeholder="100"
+//                     value={addForm.quantity}
+//                     onChange={e => updAdd("quantity", e.target.value)}
+//                   />
+//                 </div>
+//                 <div className="field">
+//                   <label>Cost Price (₹)</label>
+//                   <input
+//                     type="number" min="0" placeholder="8.00"
+//                     value={addForm.cost_price}
+//                     onChange={e => updAdd("cost_price", e.target.value)}
+//                   />
+//                 </div>
+//                 <div className="field">
+//                   <label>Selling Price (₹)</label>
+//                   <input
+//                     type="number" min="0" placeholder="12.00"
+//                     value={addForm.selling_price}
+//                     onChange={e => updAdd("selling_price", e.target.value)}
+//                   />
+//                 </div>
+//               </div>
+
+//               {/* Live margin preview */}
+//               {addForm.cost_price && addForm.selling_price && (
+//                 <div className="card-sm" style={{ marginBottom:"1rem",
+//                      display:"flex", gap:"16px", alignItems:"center" }}>
+//                   <div>
+//                     <div className="stat-label">Profit per unit</div>
+//                     <div style={{ fontFamily:"var(--font-head)", fontSize:"1rem",
+//                                   color:"var(--success)", marginTop:"2px" }}>
+//                       ₹{(Number(addForm.selling_price) - Number(addForm.cost_price)).toFixed(2)}
+//                     </div>
+//                   </div>
+//                   <div>
+//                     <div className="stat-label">Margin</div>
+//                     <div style={{ fontFamily:"var(--font-head)", fontSize:"1rem",
+//                                   color:"var(--accent)", marginTop:"2px" }}>
+//                       {margin(Number(addForm.cost_price), Number(addForm.selling_price))}
+//                     </div>
+//                   </div>
+//                   {addForm.quantity && (
+//                     <div>
+//                       <div className="stat-label">Total investment</div>
+//                       <div style={{ fontFamily:"var(--font-head)", fontSize:"1rem",
+//                                     color:"var(--text)", marginTop:"2px" }}>
+//                         ₹{(Number(addForm.cost_price) * Number(addForm.quantity)).toLocaleString("en-IN")}
+//                       </div>
+//                     </div>
+//                   )}
+//                 </div>
+//               )}
+
+//               <button
+//                 className="btn btn-primary"
+//                 onClick={addProduct}
+//                 disabled={loading || !addForm.product_name || !addForm.cost_price
+//                           || !addForm.selling_price || !addForm.quantity}
+//               >
+//                 {loading ? <Spinner dark /> : "+"} Add Product
+//               </button>
+
+//               {/* Result */}
+//               {result && (
+//                 <div className="card-sm" style={{ marginTop:"1rem",
+//                      display:"flex", alignItems:"center", gap:"14px" }}>
+//                   <div style={{
+//                     width:"40px", height:"40px", borderRadius:"8px",
+//                     background:"var(--success-dim)",
+//                     border:"1px solid rgba(92,184,122,0.3)",
+//                     display:"flex", alignItems:"center",
+//                     justifyContent:"center", fontSize:"18px"
+//                   }}>📦</div>
+//                   <div>
+//                     <div style={{ fontWeight:600, color:"var(--success)", fontSize:"0.9rem" }}>
+//                       Product Added
+//                     </div>
+//                     <div className="mono" style={{ fontSize:"0.78rem",
+//                          color:"var(--muted)", marginTop:"3px" }}>
+//                       Code: {result.product_code}
+//                     </div>
+//                     <div style={{ fontSize:"0.78rem", color:"var(--faint)", marginTop:"2px" }}>
+//                       {result.product_name} · Qty: {result.quantity}
+//                     </div>
+//                   </div>
+//                 </div>
+//               )}
+//             </>
+//           )}
+//         </div>
+//       )}
+
+//       {/* ── UPDATE STOCK ── */}
+//       {activeTab === "update" && (
+//         <div className="card">
+//           <ContextStrip />
+//           {!selectedBranch ? (
+//             <div className="alert alert-warning">⚠ No branch selected.</div>
+//           ) : (
+//             <>
+//               <div className="alert alert-info" style={{ marginBottom:"1rem" }}>
+//                 ℹ Quantity field adds to existing stock. Leave blank to keep current.
+//               </div>
+//               <div className="form-grid">
+//                 <div className="field">
+//                   <label>Product Code</label>
+//                   <input
+//                     placeholder="e.g. maggi10"
+//                     value={updateForm.product_code}
+//                     onChange={e => updUpd("product_code", e.target.value)}
+//                   />
+//                 </div>
+//                 <div className="field">
+//                   <label>Add Quantity</label>
+//                   <input
+//                     type="number" min="0"
+//                     placeholder="Leave blank to skip"
+//                     value={updateForm.quantity}
+//                     onChange={e => updUpd("quantity", e.target.value)}
+//                   />
+//                 </div>
+//                 <div className="field">
+//                   <label>New Cost Price (₹)</label>
+//                   <input
+//                     type="number" min="0"
+//                     placeholder="Leave blank to skip"
+//                     value={updateForm.cost_price}
+//                     onChange={e => updUpd("cost_price", e.target.value)}
+//                   />
+//                 </div>
+//                 <div className="field">
+//                   <label>New Selling Price (₹)</label>
+//                   <input
+//                     type="number" min="0"
+//                     placeholder="Leave blank to skip"
+//                     value={updateForm.selling_price}
+//                     onChange={e => updUpd("selling_price", e.target.value)}
+//                   />
+//                 </div>
+//               </div>
+
+//               <button
+//                 className="btn btn-primary"
+//                 onClick={updateProduct}
+//                 disabled={loading || !updateForm.product_code}
+//               >
+//                 {loading ? <Spinner dark /> : "↑"} Update Product
+//               </button>
+
+//               {/* Quick-pick from loaded products */}
+//               {products.length > 0 && (
+//                 <div style={{ marginTop:"1.25rem" }}>
+//                   <div className="stat-label" style={{ marginBottom:"0.5rem" }}>
+//                     Quick pick from branch
+//                   </div>
+//                   <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
+//                     {products.map((p, i) => (
+//                       <button
+//                         key={i}
+//                         className={`pill${updateForm.product_code === p.product_code ? " active" : ""}`}
+//                         onClick={() => updUpd("product_code", p.product_code)}
+//                       >
+//                         {p.product_name}
+//                         <span className="mono" style={{ marginLeft:"4px",
+//                               fontSize:"0.7rem", opacity:0.7 }}>
+//                           ({p.quantity})
+//                         </span>
+//                       </button>
+//                     ))}
+//                   </div>
+//                 </div>
+//               )}
+
+//               {/* Result */}
+//               {result && (
+//                 <div className="card-sm" style={{ marginTop:"1rem",
+//                      display:"flex", alignItems:"center", gap:"14px" }}>
+//                   <div style={{
+//                     width:"40px", height:"40px", borderRadius:"8px",
+//                     background:"var(--accent-dim)",
+//                     border:"1px solid rgba(232,201,122,0.3)",
+//                     display:"flex", alignItems:"center",
+//                     justifyContent:"center", fontSize:"18px"
+//                   }}>✓</div>
+//                   <div>
+//                     <div style={{ fontWeight:600, color:"var(--accent)", fontSize:"0.9rem" }}>
+//                       Product Updated
+//                     </div>
+//                     <div className="mono" style={{ fontSize:"0.78rem",
+//                          color:"var(--muted)", marginTop:"3px" }}>
+//                       {result.product_code}
+//                     </div>
+//                     <div style={{ fontSize:"0.78rem", color:"var(--faint)", marginTop:"2px" }}>
+//                       New stock: {result.quantity} units
+//                       · ₹{result.selling_price} selling price
+//                     </div>
+//                   </div>
+//                 </div>
+//               )}
+//             </>
+//           )}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+function Products({ selectedBranch }) {
+  const [alert, show]   = useAlert();
+  const [activeTab, setActiveTab] = useState("view");
+  const [loading, setLoading]     = useState(false);
+  const [products, setProducts]   = useState([]);
+  const [productsLoading, setPL]  = useState(false);
+
+  // Add product form
   const [addForm, setAddForm] = useState({
     product_name: "", cost_price: "", selling_price: "", quantity: ""
   });
+
+  // Update stock form
   const [updateForm, setUpdateForm] = useState({
     product_code: "", quantity: "", selling_price: "", cost_price: ""
   });
 
-  const upd = (form, setForm) => (k, v) => setForm(f => ({ ...f, [k]: v }));
+  // Set quantity form (new)
+  const [setQtyForm, setSetQtyForm] = useState({
+    product_code: "", branch_id: "", new_quantity: ""
+  });
+
+  // Delete form (new)
+  const [deleteCode, setDeleteCode]     = useState("");
+  const [deleteBranchId, setDeleteBranchId] = useState("");
+  const [deleteConfirm, setDeleteConfirm]   = useState("");
+  const [deleteResult, setDeleteResult]     = useState(null);
+  const [setQtyResult, setSetQtyResult]     = useState(null);
+
+  const upd    = (form, setForm) => (k, v) => setForm(f => ({ ...f, [k]: v }));
   const updAdd = upd(addForm, setAddForm);
   const updUpd = upd(updateForm, setUpdateForm);
+  const updQty = upd(setQtyForm, setSetQtyForm);
 
-  // Fetch all products for selected branch
   const fetchProducts = async () => {
-    if (!selectedBranch?._id) { show("error", "No branch selected"); return; }
-    setLoading(true);
+    if (!selectedBranch?._id) return;
+    setPL(true);
+    setProducts([]);
     try {
       const r = await fetch(
         `${API}/get-products/${selectedBranch._id}`,
@@ -797,17 +1253,16 @@ function Products({ selectedBranch }) {
       );
       const d = await r.json();
       if (!r.ok) throw new Error(d.message);
-      setProducts(d?.products || d?.data || []);
+      setProducts(d?.products || []);
     } catch (e) {
-      // If no get-products endpoint, show empty
-      setProducts([]);
+      show("error", e.message);
     } finally {
-      setLoading(false);
+      setPL(false);
     }
   };
 
   useEffect(() => {
-    if (activeTab === "view" && selectedBranch?._id) fetchProducts();
+    if (selectedBranch?._id) fetchProducts();
   }, [activeTab, selectedBranch]);
 
   const addProduct = async () => {
@@ -818,98 +1273,143 @@ function Products({ selectedBranch }) {
     }
     setLoading(true);
     try {
-      const r = await fetch(
-        `${API}/add-product/${selectedBranch._id}`,
-        {
-          method: "POST",
-          headers: authHeader(),
-          body: JSON.stringify({
-            product_name,
-            cost_price: Number(cost_price),
-            selling_price: Number(selling_price),
-            quantity: Number(quantity),
-          }),
-        }
-      );
+      const r = await fetch(`${API}/add-product/${selectedBranch._id}`, {
+        method:  "POST",
+        headers: authHeader(),
+        body:    JSON.stringify({
+          product_name,
+          cost_price:    Number(cost_price),
+          selling_price: Number(selling_price),
+          quantity:      Number(quantity),
+        }),
+      });
       const d = await r.json();
       if (!r.ok) throw new Error(d.message);
-      show("success", `Product "${product_name}" added successfully!`);
-      setResult(d?.product_data || d);
-      setAddForm({ product_name: "", cost_price: "", selling_price: "", quantity: "" });
+      show("success", `Product "${product_name}" added!`);
+      setAddForm({ product_name:"", cost_price:"", selling_price:"", quantity:"" });
       fetchProducts();
-    } catch (e) {
-      show("error", e.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { show("error", e.message); }
+    finally { setLoading(false); }
   };
 
   const updateProduct = async () => {
     if (!selectedBranch?._id) { show("error", "No branch selected"); return; }
-    if (!updateForm.product_code) { show("error", "Product code is required"); return; }
+    if (!updateForm.product_code) { show("error", "Product code required"); return; }
     setLoading(true);
     try {
       const body = {};
-      if (updateForm.quantity)     body.quantity      = Number(updateForm.quantity);
+      if (updateForm.quantity)      body.quantity      = Number(updateForm.quantity);
       if (updateForm.selling_price) body.selling_price = Number(updateForm.selling_price);
-      if (updateForm.cost_price)   body.cost_price    = Number(updateForm.cost_price);
-
+      if (updateForm.cost_price)    body.cost_price    = Number(updateForm.cost_price);
       const r = await fetch(
         `${API}/update-product/${selectedBranch._id}/${updateForm.product_code}`,
-        { method: "PATCH", headers: authHeader(), body: JSON.stringify(body) }
+        { method:"PATCH", headers:authHeader(), body:JSON.stringify(body) }
       );
       const d = await r.json();
       if (!r.ok) throw new Error(d.message);
-      show("success", "Product updated successfully!");
-      setResult(d?.updated_data || d);
+      show("success", "Product updated!");
       fetchProducts();
-    } catch (e) {
-      show("error", e.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { show("error", e.message); }
+    finally { setLoading(false); }
   };
 
-  const tabs = [
-    { key: "view",   label: "All Products" },
-    { key: "add",    label: "Add Product"  },
-    { key: "update", label: "Update Stock" },
-  ];
+  // ── NEW: Set exact quantity ───────────────────────────────
+  const setExactQuantity = async () => {
+    if (!setQtyForm.product_code)  { show("error", "Product code required"); return; }
+    if (!setQtyForm.branch_id)     { show("error", "Branch ID required"); return; }
+    if (setQtyForm.new_quantity === "") { show("error", "New quantity required"); return; }
+    setLoading(true);
+    setSetQtyResult(null);
+    try {
+      const r = await fetch(
+        `${API}/update-quantity/${setQtyForm.branch_id}/${selectedBranch?.branch_code?.split("-")[0] || ""}/${setQtyForm.product_code}`,
+        {
+          method:  "PATCH",
+          headers: authHeader(),
+          body:    JSON.stringify({ new_quantity: Number(setQtyForm.new_quantity) }),
+        }
+      );
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.message);
+      show("success", "Quantity updated!");
+      setSetQtyResult(d?.information || d);
+      setSetQtyForm({ product_code:"", branch_id:"", new_quantity:"" });
+      fetchProducts();
+    } catch (e) { show("error", e.message); }
+    finally { setLoading(false); }
+  };
 
-  // Context strip
-  const ContextStrip = () => (
-    <div style={{ display:"flex", gap:"10px", marginBottom:"1rem", flexWrap:"wrap" }}>
-      {selectedBranch && (
-        <span className="badge badge-accent">
-          ◆ {selectedBranch.branch_name} · {selectedBranch.branch_code}
-        </span>
-      )}
-    </div>
-  );
+  // ── NEW: Delete product ───────────────────────────────────
+  const deleteProduct = async () => {
+    if (!deleteCode.trim())    { show("error", "Product code required"); return; }
+    if (!deleteBranchId.trim()){ show("error", "Branch ID required"); return; }
+    if (deleteConfirm !== deleteCode) {
+      show("error", "Confirmation code does not match — type the product code exactly to confirm deletion");
+      return;
+    }
+    setLoading(true);
+    setDeleteResult(null);
+    try {
+      const biz = selectedBranch?.branch_code?.split("-")[0] || "";
+      const r = await fetch(
+        `${API}/delete-product/${biz}/${deleteBranchId}/${deleteCode}`,
+        { method:"DELETE", headers:authHeader() }
+      );
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.message);
+      show("success", `Product "${deleteCode}" deleted.`);
+      setDeleteResult(d);
+      setDeleteCode(""); setDeleteBranchId(""); setDeleteConfirm("");
+      fetchProducts();
+    } catch (e) { show("error", e.message); }
+    finally { setLoading(false); }
+  };
 
-  // Profit margin helper
   const margin = (cost, sell) => {
     if (!cost || !sell || sell === 0) return "—";
     return `${(((sell - cost) / sell) * 100).toFixed(1)}%`;
   };
 
-  // Stock level badge
   const stockBadge = (qty) => {
     if (qty <= 0)  return <span className="badge badge-danger">Out of stock</span>;
     if (qty <= 10) return <span className="badge badge-warning">Low</span>;
     return <span className="badge badge-success">In stock</span>;
   };
 
+  const ContextStrip = () => (
+    <div style={{ display:"flex", gap:"10px", marginBottom:"1rem", flexWrap:"wrap" }}>
+      {selectedBranch && (
+        <>
+          <span className="badge badge-accent">
+            ◆ {selectedBranch.branch_name} · {selectedBranch.branch_code}
+          </span>
+          <span className="badge badge-info mono" style={{ fontSize:"0.68rem" }}>
+            ID: {selectedBranch._id}
+          </span>
+        </>
+      )}
+    </div>
+  );
+
+  const tabs = [
+    { key:"view",    label:"All Products"  },
+    { key:"add",     label:"Add Product"   },
+    { key:"update",  label:"Update Stock"  },
+    { key:"manage",  label:"Manage"        },  // ← new tab
+  ];
+
   return (
     <div>
       <Alert alert={alert} />
       <div className="pill-tabs">
         {tabs.map(t => (
-          <button
-            key={t.key}
+          <button key={t.key}
             className={`pill${activeTab === t.key ? " active" : ""}`}
-            onClick={() => { setActiveTab(t.key); setResult(null); }}
-          >
+            onClick={() => {
+              setActiveTab(t.key);
+              setDeleteResult(null);
+              setSetQtyResult(null);
+            }}>
             {t.label}
           </button>
         ))}
@@ -924,28 +1424,22 @@ function Products({ selectedBranch }) {
             <div className="stat-label">
               {products.length} product{products.length !== 1 ? "s" : ""} in branch
             </div>
-            <button className="btn btn-ghost btn-sm" onClick={fetchProducts} disabled={loading}>
-              {loading ? <Spinner /> : "↻"} Refresh
+            <button className="btn btn-ghost btn-sm"
+              onClick={fetchProducts} disabled={productsLoading}>
+              {productsLoading ? <Spinner /> : "↻"} Refresh
             </button>
           </div>
-
-          {loading ? (
-            <div className="empty"><Spinner /> Loading products...</div>
+          {productsLoading ? (
+            <div className="empty"><Spinner /> Loading...</div>
           ) : products.length > 0 ? (
             <div className="tbl-wrap">
               <table>
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Code</th>
-                    <th>Cost Price</th>
-                    <th>Selling Price</th>
-                    <th>Margin</th>
-                    <th>Quantity</th>
-                    <th>Status</th>
-                    <th>Added</th>
-                  </tr>
-                </thead>
+                <thead><tr>
+                  <th>Product</th><th>Code</th>
+                  <th>Cost</th><th>Selling</th>
+                  <th>Margin</th><th>Qty</th>
+                  <th>Status</th><th>Added</th>
+                </tr></thead>
                 <tbody>
                   {products.map((p, i) => (
                     <tr key={i}>
@@ -953,7 +1447,9 @@ function Products({ selectedBranch }) {
                       <td className="mono" style={{ color:"var(--muted)" }}>
                         {p.product_code}
                       </td>
-                      <td className="mono">₹{Number(p.cost_price).toLocaleString("en-IN")}</td>
+                      <td className="mono">
+                        ₹{Number(p.cost_price).toLocaleString("en-IN")}
+                      </td>
                       <td className="mono" style={{ color:"var(--accent)" }}>
                         ₹{Number(p.selling_price).toLocaleString("en-IN")}
                       </td>
@@ -973,10 +1469,7 @@ function Products({ selectedBranch }) {
           ) : (
             <div className="empty">
               <div className="empty-icon">📦</div>
-              No products found for this branch.
-              <div style={{ fontSize:"0.75rem", marginTop:"8px", color:"var(--faint)" }}>
-                Add your first product using the "Add Product" tab.
-              </div>
+              No products found. Add your first product.
             </div>
           )}
         </div>
@@ -993,39 +1486,30 @@ function Products({ selectedBranch }) {
               <div className="form-grid">
                 <div className="field">
                   <label>Product Name</label>
-                  <input
-                    placeholder="e.g. Maggi Noodles"
+                  <input placeholder="e.g. Maggi Noodles"
                     value={addForm.product_name}
-                    onChange={e => updAdd("product_name", e.target.value)}
-                  />
+                    onChange={e => updAdd("product_name", e.target.value)} />
                 </div>
                 <div className="field">
                   <label>Quantity</label>
-                  <input
-                    type="number" min="1" placeholder="100"
+                  <input type="number" min="1" placeholder="100"
                     value={addForm.quantity}
-                    onChange={e => updAdd("quantity", e.target.value)}
-                  />
+                    onChange={e => updAdd("quantity", e.target.value)} />
                 </div>
                 <div className="field">
                   <label>Cost Price (₹)</label>
-                  <input
-                    type="number" min="0" placeholder="8.00"
+                  <input type="number" min="0" placeholder="8.00"
                     value={addForm.cost_price}
-                    onChange={e => updAdd("cost_price", e.target.value)}
-                  />
+                    onChange={e => updAdd("cost_price", e.target.value)} />
                 </div>
                 <div className="field">
                   <label>Selling Price (₹)</label>
-                  <input
-                    type="number" min="0" placeholder="12.00"
+                  <input type="number" min="0" placeholder="12.00"
                     value={addForm.selling_price}
-                    onChange={e => updAdd("selling_price", e.target.value)}
-                  />
+                    onChange={e => updAdd("selling_price", e.target.value)} />
                 </div>
               </div>
 
-              {/* Live margin preview */}
               {addForm.cost_price && addForm.selling_price && (
                 <div className="card-sm" style={{ marginBottom:"1rem",
                      display:"flex", gap:"16px", alignItems:"center" }}>
@@ -1048,47 +1532,19 @@ function Products({ selectedBranch }) {
                       <div className="stat-label">Total investment</div>
                       <div style={{ fontFamily:"var(--font-head)", fontSize:"1rem",
                                     color:"var(--text)", marginTop:"2px" }}>
-                        ₹{(Number(addForm.cost_price) * Number(addForm.quantity)).toLocaleString("en-IN")}
+                        ₹{(Number(addForm.cost_price) * Number(addForm.quantity))
+                            .toLocaleString("en-IN")}
                       </div>
                     </div>
                   )}
                 </div>
               )}
 
-              <button
-                className="btn btn-primary"
-                onClick={addProduct}
+              <button className="btn btn-primary" onClick={addProduct}
                 disabled={loading || !addForm.product_name || !addForm.cost_price
-                          || !addForm.selling_price || !addForm.quantity}
-              >
+                          || !addForm.selling_price || !addForm.quantity}>
                 {loading ? <Spinner dark /> : "+"} Add Product
               </button>
-
-              {/* Result */}
-              {result && (
-                <div className="card-sm" style={{ marginTop:"1rem",
-                     display:"flex", alignItems:"center", gap:"14px" }}>
-                  <div style={{
-                    width:"40px", height:"40px", borderRadius:"8px",
-                    background:"var(--success-dim)",
-                    border:"1px solid rgba(92,184,122,0.3)",
-                    display:"flex", alignItems:"center",
-                    justifyContent:"center", fontSize:"18px"
-                  }}>📦</div>
-                  <div>
-                    <div style={{ fontWeight:600, color:"var(--success)", fontSize:"0.9rem" }}>
-                      Product Added
-                    </div>
-                    <div className="mono" style={{ fontSize:"0.78rem",
-                         color:"var(--muted)", marginTop:"3px" }}>
-                      Code: {result.product_code}
-                    </div>
-                    <div style={{ fontSize:"0.78rem", color:"var(--faint)", marginTop:"2px" }}>
-                      {result.product_name} · Qty: {result.quantity}
-                    </div>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>
@@ -1098,117 +1554,312 @@ function Products({ selectedBranch }) {
       {activeTab === "update" && (
         <div className="card">
           <ContextStrip />
-          {!selectedBranch ? (
-            <div className="alert alert-warning">⚠ No branch selected.</div>
-          ) : (
-            <>
-              <div className="alert alert-info" style={{ marginBottom:"1rem" }}>
-                ℹ Quantity field adds to existing stock. Leave blank to keep current.
+          <div className="alert alert-info" style={{ marginBottom:"1rem" }}>
+            ℹ Quantity field <strong>adds</strong> to existing stock.
+            To set an exact quantity use the Manage tab.
+          </div>
+          <div className="form-grid">
+            <div className="field">
+              <label>Product Code</label>
+              <input placeholder="e.g. maggi10"
+                value={updateForm.product_code}
+                onChange={e => updUpd("product_code", e.target.value)} />
+            </div>
+            <div className="field">
+              <label>Add Quantity</label>
+              <input type="number" min="0" placeholder="Leave blank to skip"
+                value={updateForm.quantity}
+                onChange={e => updUpd("quantity", e.target.value)} />
+            </div>
+            <div className="field">
+              <label>New Cost Price (₹)</label>
+              <input type="number" min="0" placeholder="Leave blank to skip"
+                value={updateForm.cost_price}
+                onChange={e => updUpd("cost_price", e.target.value)} />
+            </div>
+            <div className="field">
+              <label>New Selling Price (₹)</label>
+              <input type="number" min="0" placeholder="Leave blank to skip"
+                value={updateForm.selling_price}
+                onChange={e => updUpd("selling_price", e.target.value)} />
+            </div>
+          </div>
+
+          {/* Quick pick */}
+          {products.length > 0 && (
+            <div style={{ marginBottom:"1rem" }}>
+              <div className="stat-label" style={{ marginBottom:"0.5rem" }}>
+                Quick pick
               </div>
-              <div className="form-grid">
-                <div className="field">
-                  <label>Product Code</label>
-                  <input
-                    placeholder="e.g. maggi10"
-                    value={updateForm.product_code}
-                    onChange={e => updUpd("product_code", e.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>Add Quantity</label>
-                  <input
-                    type="number" min="0"
-                    placeholder="Leave blank to skip"
-                    value={updateForm.quantity}
-                    onChange={e => updUpd("quantity", e.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>New Cost Price (₹)</label>
-                  <input
-                    type="number" min="0"
-                    placeholder="Leave blank to skip"
-                    value={updateForm.cost_price}
-                    onChange={e => updUpd("cost_price", e.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>New Selling Price (₹)</label>
-                  <input
-                    type="number" min="0"
-                    placeholder="Leave blank to skip"
-                    value={updateForm.selling_price}
-                    onChange={e => updUpd("selling_price", e.target.value)}
-                  />
-                </div>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
+                {products.map((p, i) => (
+                  <button key={i}
+                    className={`pill${updateForm.product_code === p.product_code ? " active" : ""}`}
+                    onClick={() => updUpd("product_code", p.product_code)}>
+                    {p.product_name}
+                    <span className="mono" style={{ marginLeft:"4px",
+                          fontSize:"0.7rem", opacity:0.7 }}>
+                      ({p.quantity})
+                    </span>
+                  </button>
+                ))}
               </div>
-
-              <button
-                className="btn btn-primary"
-                onClick={updateProduct}
-                disabled={loading || !updateForm.product_code}
-              >
-                {loading ? <Spinner dark /> : "↑"} Update Product
-              </button>
-
-              {/* Quick-pick from loaded products */}
-              {products.length > 0 && (
-                <div style={{ marginTop:"1.25rem" }}>
-                  <div className="stat-label" style={{ marginBottom:"0.5rem" }}>
-                    Quick pick from branch
-                  </div>
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
-                    {products.map((p, i) => (
-                      <button
-                        key={i}
-                        className={`pill${updateForm.product_code === p.product_code ? " active" : ""}`}
-                        onClick={() => updUpd("product_code", p.product_code)}
-                      >
-                        {p.product_name}
-                        <span className="mono" style={{ marginLeft:"4px",
-                              fontSize:"0.7rem", opacity:0.7 }}>
-                          ({p.quantity})
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Result */}
-              {result && (
-                <div className="card-sm" style={{ marginTop:"1rem",
-                     display:"flex", alignItems:"center", gap:"14px" }}>
-                  <div style={{
-                    width:"40px", height:"40px", borderRadius:"8px",
-                    background:"var(--accent-dim)",
-                    border:"1px solid rgba(232,201,122,0.3)",
-                    display:"flex", alignItems:"center",
-                    justifyContent:"center", fontSize:"18px"
-                  }}>✓</div>
-                  <div>
-                    <div style={{ fontWeight:600, color:"var(--accent)", fontSize:"0.9rem" }}>
-                      Product Updated
-                    </div>
-                    <div className="mono" style={{ fontSize:"0.78rem",
-                         color:"var(--muted)", marginTop:"3px" }}>
-                      {result.product_code}
-                    </div>
-                    <div style={{ fontSize:"0.78rem", color:"var(--faint)", marginTop:"2px" }}>
-                      New stock: {result.quantity} units
-                      · ₹{result.selling_price} selling price
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
+            </div>
           )}
+
+          <button className="btn btn-primary" onClick={updateProduct}
+            disabled={loading || !updateForm.product_code}>
+            {loading ? <Spinner dark /> : "↑"} Update Product
+          </button>
+        </div>
+      )}
+
+      {/* ── MANAGE: SET QUANTITY + DELETE ── */}
+      {activeTab === "manage" && (
+        <div>
+          <ContextStrip />
+
+          {/* Branch ID helper */}
+          {selectedBranch && (
+            <div className="alert alert-info" style={{ marginBottom:"1rem" }}>
+              ℹ Your branch ID for this branch is{" "}
+              <span className="mono" style={{ color:"var(--accent)" }}>
+                {selectedBranch._id}
+              </span>
+              {" "}— it is pre-filled in the forms below.
+            </div>
+          )}
+
+          {/* ── SET EXACT QUANTITY ── */}
+          <div className="card" style={{ marginBottom:"1rem" }}>
+            <div style={{ display:"flex", alignItems:"center",
+                          gap:"8px", marginBottom:"0.75rem" }}>
+              <div style={{
+                width:"22px", height:"22px", borderRadius:"50%",
+                background:"var(--info)", color:"#0d0d0d",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                fontSize:"11px", fontWeight:700, flexShrink:0
+              }}>1</div>
+              <div className="section-title">Set Exact Quantity</div>
+            </div>
+
+            <div className="alert alert-warning" style={{ marginBottom:"1rem" }}>
+              ⚠ This overwrites the current stock quantity directly.
+              Use for stock-take corrections, not for restocking.
+            </div>
+
+            <div className="form-grid">
+              <div className="field">
+                <label>Product Code</label>
+                <input placeholder="e.g. maggi10"
+                  value={setQtyForm.product_code}
+                  onChange={e => updQty("product_code", e.target.value)} />
+              </div>
+              <div className="field">
+                <label>Branch ID</label>
+                <input
+                  placeholder="branch ObjectId"
+                  value={setQtyForm.branch_id || selectedBranch?._id || ""}
+                  onChange={e => updQty("branch_id", e.target.value)} />
+              </div>
+              <div className="field">
+                <label>New Exact Quantity</label>
+                <input type="number" min="0" placeholder="e.g. 50"
+                  value={setQtyForm.new_quantity}
+                  onChange={e => updQty("new_quantity", e.target.value)} />
+              </div>
+            </div>
+
+            {/* Quick pick */}
+            {products.length > 0 && (
+              <div style={{ marginBottom:"1rem" }}>
+                <div className="stat-label" style={{ marginBottom:"0.5rem" }}>
+                  Quick pick product
+                </div>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
+                  {products.map((p, i) => (
+                    <button key={i}
+                      className={`pill${setQtyForm.product_code === p.product_code
+                        ? " active" : ""}`}
+                      onClick={() => updQty("product_code", p.product_code)}>
+                      {p.product_name}
+                      <span className="mono" style={{ marginLeft:"4px",
+                            fontSize:"0.7rem", opacity:0.7 }}>
+                        (current: {p.quantity})
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button className="btn btn-primary"
+              onClick={() => {
+                const filled = { ...setQtyForm };
+                if (!filled.branch_id && selectedBranch?._id) {
+                  filled.branch_id = selectedBranch._id;
+                  setSetQtyForm(filled);
+                }
+                setExactQuantity();
+              }}
+              disabled={loading || !setQtyForm.product_code
+                        || setQtyForm.new_quantity === ""}>
+              {loading ? <Spinner dark /> : "✎"} Set Quantity
+            </button>
+
+            {setQtyResult && (
+              <div className="card-sm" style={{ marginTop:"1rem",
+                   display:"flex", alignItems:"center", gap:"14px" }}>
+                <div style={{
+                  width:"40px", height:"40px", borderRadius:"8px",
+                  background:"var(--success-dim)",
+                  border:"1px solid rgba(92,184,122,0.3)",
+                  display:"flex", alignItems:"center",
+                  justifyContent:"center", fontSize:"18px"
+                }}>✓</div>
+                <div>
+                  <div style={{ fontWeight:600, color:"var(--success)" }}>
+                    Quantity Updated
+                  </div>
+                  <div className="mono" style={{ fontSize:"0.78rem",
+                       color:"var(--muted)", marginTop:"3px" }}>
+                    {setQtyResult.product_code}
+                  </div>
+                  <div style={{ fontSize:"0.78rem",
+                       color:"var(--faint)", marginTop:"2px" }}>
+                    New stock: {setQtyResult.quantity} units
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── DELETE PRODUCT ── */}
+          <div className="card">
+            <div style={{ display:"flex", alignItems:"center",
+                          gap:"8px", marginBottom:"0.75rem" }}>
+              <div style={{
+                width:"22px", height:"22px", borderRadius:"50%",
+                background:"var(--danger)", color:"#0d0d0d",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                fontSize:"11px", fontWeight:700, flexShrink:0
+              }}>2</div>
+              <div className="section-title">Delete Product</div>
+            </div>
+
+            <div className="alert alert-error" style={{ marginBottom:"1rem" }}>
+              ✕ This permanently deletes the product and all its data.
+              This action cannot be undone.
+            </div>
+
+            <div className="form-grid">
+              <div className="field">
+                <label>Product Code to Delete</label>
+                <input placeholder="e.g. maggi10"
+                  value={deleteCode}
+                  onChange={e => {
+                    setDeleteCode(e.target.value);
+                    setDeleteConfirm("");
+                  }} />
+              </div>
+              <div className="field">
+                <label>Branch ID</label>
+                <input
+                  placeholder="branch ObjectId"
+                  value={deleteBranchId || selectedBranch?._id || ""}
+                  onChange={e => setDeleteBranchId(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Quick pick for delete */}
+            {products.length > 0 && (
+              <div style={{ marginBottom:"1rem" }}>
+                <div className="stat-label" style={{ marginBottom:"0.5rem" }}>
+                  Select product to delete
+                </div>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
+                  {products.map((p, i) => (
+                    <button key={i}
+                      className={`pill${deleteCode === p.product_code ? " active" : ""}`}
+                      style={ deleteCode === p.product_code
+                        ? { borderColor:"var(--danger)", color:"var(--danger)",
+                            background:"var(--danger-dim)" }
+                        : {} }
+                      onClick={() => {
+                        setDeleteCode(p.product_code);
+                        setDeleteBranchId(selectedBranch?._id || "");
+                        setDeleteConfirm("");
+                      }}>
+                      {p.product_name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Confirmation input — only shown when a code is entered */}
+            {deleteCode.trim() && (
+              <div className="field" style={{ marginBottom:"1rem" }}>
+                <label>
+                  Type <span className="mono" style={{ color:"var(--danger)" }}>
+                    {deleteCode}
+                  </span> to confirm deletion
+                </label>
+                <input
+                  placeholder={`Type ${deleteCode} to confirm`}
+                  value={deleteConfirm}
+                  onChange={e => setDeleteConfirm(e.target.value)}
+                  style={{ borderColor: deleteConfirm === deleteCode
+                    ? "var(--danger)" : "var(--border)" }}
+                />
+              </div>
+            )}
+
+            <button
+              className="btn btn-danger"
+              onClick={() => {
+                if (!deleteBranchId && selectedBranch?._id) {
+                  setDeleteBranchId(selectedBranch._id);
+                }
+                deleteProduct();
+              }}
+              disabled={loading || !deleteCode.trim()
+                        || deleteConfirm !== deleteCode}>
+              {loading ? <Spinner /> : "✕"} Delete Product
+            </button>
+
+            {deleteResult && (
+              <div className="card-sm" style={{ marginTop:"1rem",
+                   display:"flex", alignItems:"center", gap:"14px" }}>
+                <div style={{
+                  width:"40px", height:"40px", borderRadius:"8px",
+                  background:"var(--danger-dim)",
+                  border:"1px solid rgba(224,90,74,0.3)",
+                  display:"flex", alignItems:"center",
+                  justifyContent:"center", fontSize:"18px"
+                }}>🗑</div>
+                <div>
+                  <div style={{ fontWeight:600, color:"var(--danger)" }}>
+                    Product Deleted
+                  </div>
+                  <div className="mono" style={{ fontSize:"0.78rem",
+                       color:"var(--muted)", marginTop:"3px" }}>
+                    {deleteResult?.information?.product_code
+                      || deleteResult?.product_code || "—"}
+                  </div>
+                  <div style={{ fontSize:"0.78rem",
+                       color:"var(--faint)", marginTop:"2px" }}>
+                    {deleteResult?.message || "Removed from inventory"}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
 }
-
 function Sales({ selectedBranch }) {
   const [alert, show]   = useAlert();
   const [activeTab, setActiveTab] = useState("record");

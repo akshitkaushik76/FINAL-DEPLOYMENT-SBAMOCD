@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const product = require('./../MODELS/product');
+const { findOneAndDelete } = require('../MODELS/customer_buisness');
 
 function generate_product_code(product_name,product_per_unit_price) {
     const product_code = `${product_name}${product_per_unit_price}`;
@@ -119,3 +120,54 @@ exports.get_products = async (req, res) => {
         res.status(500).json({ status:'failure', message: error.message });
     }
 };
+
+exports.updatequantity = async(req,res,next)=>{
+    try{
+      const {branch_id,business_code,product_code} = req.params; 
+      const {new_quantity} = req.body 
+      if(new_quantity == null || new_quantity < 0) return res.status(400).json({ status:'failure', message:'invalid quantity' });
+       const branch_id_obj = mongoose.Types.ObjectId.isValid(branch_id)
+    ? new mongoose.Types.ObjectId(branch_id)
+    : branch_id;
+      const updated_product_quantity = await product.findOneAndUpdate(
+        {branch_id_obj,business_code,product_code},
+        {$set:{quantity:new_quantity,updation_date:compute_inclusion_date()}},
+        {new:true,runValidators:true}
+        )
+       if(!updated_product_quantity) {
+          return res.status(404).json({ status:'failure', message:'product not found' });
+       }
+       res.status(200).json({
+        status:'success',
+        information:updated_product_quantity
+       })
+    } catch(error) {
+         res.status(500).json({
+            status:'failure',
+            message:error.message
+        })
+    }
+}
+
+exports.delete_product_information = async(req,res,next)=>{
+    try{
+        const {business_code,branch_id,product_code} = req.params;
+        const branch_id_obj = mongoose.Types.ObjectId.isValid(branch_id)
+       ? new mongoose.Types.ObjectId(branch_id)
+       : branch_id;
+        const delete_product = await product.findOneAndDelete({business_code,branch_id_obj,product_code});
+        if(!delete_product) {
+            return res.status(404).json({ status:'failure', message:'product not found' });
+        }
+        return res.status(200).json({
+            status:'success',
+            information:delete_product,
+            message:'product deleted successfully'
+        })
+    } catch(error) {
+        res.status(500).json({
+            status:'failure',
+            message:error.message
+        })
+    }
+}
