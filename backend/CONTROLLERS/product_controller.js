@@ -129,59 +129,141 @@ exports.get_products = async (req, res) => {
     }
 };
 
-exports.updatequantity = async(req,res,next)=>{
-    try{
-      const {branch_id,business_code} = req.params; 
-      const {product_code} = req.query
-      const {new_quantity} = req.body 
-      if(new_quantity == null || new_quantity < 0) return res.status(400).json({ status:'failure', message:'invalid quantity' });
-       const branch_id_obj = mongoose.Types.ObjectId.isValid(branch_id)
-    ? new mongoose.Types.ObjectId(branch_id)
-    : branch_id;
-      const updated_product_quantity = await product.findOneAndUpdate(
-        {branch_id_obj,business_code,product_code},
-        {$set:{quantity:new_quantity,updation_date:compute_inclusion_date()}},
-        {new:true,runValidators:true}
-        )
-       if(!updated_product_quantity) {
-          return res.status(404).json({ status:'failure', message:'product not found' });
-       }
-       res.status(200).json({
-        status:'success',
-        information:updated_product_quantity
-       })
-    } catch(error) {
-         res.status(500).json({
-            status:'failure',
-            message:error.message
-        })
-    }
-}
+// exports.updatequantity = async(req,res,next)=>{
+//     try{
+//       const {branch_id,business_code} = req.params; 
+//       const {product_code} = req.query
+//       const {new_quantity} = req.body 
+//       if(new_quantity == null || new_quantity < 0) return res.status(400).json({ status:'failure', message:'invalid quantity' });
+//        const branch_id_obj = mongoose.Types.ObjectId.isValid(branch_id)
+//     ? new mongoose.Types.ObjectId(branch_id)
+//     : branch_id;
+//       const updated_product_quantity = await product.findOneAndUpdate(
+//         {branch_id_obj,business_code,product_code},
+//         {$set:{quantity:new_quantity,updation_date:compute_inclusion_date()}},
+//         {new:true,runValidators:true}
+//         )
+//        if(!updated_product_quantity) {
+//           return res.status(404).json({ status:'failure', message:'product not found' });
+//        }
+//        res.status(200).json({
+//         status:'success',
+//         information:updated_product_quantity
+//        })
+//     } catch(error) {
+//          res.status(500).json({
+//             status:'failure',
+//             message:error.message
+//         })
+//     }
+// }
 
-exports.delete_product_information = async(req,res,next)=>{
-    try{
-        const {business_code,branch_id} = req.params;
-        const {product_code} = req.query
-        const branch_id_obj = mongoose.Types.ObjectId.isValid(branch_id)
-       ? new mongoose.Types.ObjectId(branch_id)
-       : branch_id;
-        const delete_product = await product.findOneAndDelete({business_code,branch_id_obj,product_code});
-        if(!delete_product) {
-            return res.status(404).json({ status:'failure', message:'product not found' });
+// exports.delete_product_information = async(req,res,next)=>{
+//     try{
+//         const {business_code,branch_id} = req.params;
+//         const {product_code} = req.query
+//         const branch_id_obj = mongoose.Types.ObjectId.isValid(branch_id)
+//        ? new mongoose.Types.ObjectId(branch_id)
+//        : branch_id;
+//         const delete_product = await product.findOneAndDelete({business_code,branch_id_obj,product_code});
+//         if(!delete_product) {
+//             return res.status(404).json({ status:'failure', message:'product not found' });
+//         }
+//         return res.status(200).json({
+//             status:'success',
+//             information:delete_product,
+//             message:'product deleted successfully'
+//         })
+//     } catch(error) {
+//         res.status(500).json({
+//             status:'failure',
+//             message:error.message
+//         })
+//     }
+// }
+
+
+exports.updatequantity = async (req, res, next) => {
+    try {
+        const { branch_id, business_code } = req.params;
+        const { product_code } = req.query;    // ← from query string
+        const { new_quantity }  = req.body;
+
+        if (!product_code) {
+            return res.status(400).json({
+                status: 'failure', message: 'product_code is required'
+            });
         }
-        return res.status(200).json({
-            status:'success',
-            information:delete_product,
-            message:'product deleted successfully'
-        })
-    } catch(error) {
-        res.status(500).json({
-            status:'failure',
-            message:error.message
-        })
-    }
-}
+        if (new_quantity == null || new_quantity < 0) {
+            return res.status(400).json({
+                status: 'failure', message: 'invalid quantity'
+            });
+        }
 
+        const mongoose   = require('mongoose');
+        const branch_obj = mongoose.Types.ObjectId.isValid(branch_id)
+            ? new mongoose.Types.ObjectId(branch_id)
+            : branch_id;
+
+        const updated = await product.findOneAndUpdate(
+            { branch_id: branch_obj, business_code, product_code },
+            { $set: { quantity: new_quantity, updation_date: compute_inclusion_date() } },
+            { new: true, runValidators: true }
+        );
+
+        if (!updated) {
+            return res.status(404).json({
+                status: 'failure',
+                message: `Product "${product_code}" not found in this branch`
+            });
+        }
+
+        res.status(200).json({ status: 'success', information: updated });
+
+    } catch (error) {
+        res.status(500).json({ status: 'failure', message: error.message });
+    }
+};
+
+exports.delete_product_information = async (req, res, next) => {
+    try {
+        const { business_code, branch_id } = req.params;
+        const { product_code } = req.query;    // ← from query string
+
+        if (!product_code) {
+            return res.status(400).json({
+                status: 'failure', message: 'product_code is required'
+            });
+        }
+
+        const mongoose   = require('mongoose');
+        const branch_obj = mongoose.Types.ObjectId.isValid(branch_id)
+            ? new mongoose.Types.ObjectId(branch_id)
+            : branch_id;
+
+        const deleted = await product.findOneAndDelete({
+            business_code,
+            branch_id: branch_obj,
+            product_code
+        });
+
+        if (!deleted) {
+            return res.status(404).json({
+                status: 'failure',
+                message: `Product "${product_code}" not found`
+            });
+        }
+
+        res.status(200).json({
+            status:      'success',
+            information: deleted,
+            message:     'product deleted successfully'
+        });
+
+    } catch (error) {
+        res.status(500).json({ status: 'failure', message: error.message });
+    }
+};
 
 exports.add_measured_product = async(req,res,next)=>{
     try{
