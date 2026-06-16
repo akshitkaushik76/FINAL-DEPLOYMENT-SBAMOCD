@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const product = require('./../MODELS/product');
+const Mproduct = require('./../MODELS/measured_product')
 const { findOneAndDelete } = require('../MODELS/customer_buisness');
 
 function generate_product_code(product_name,product_per_unit_price) {
@@ -12,6 +13,13 @@ function compute_inclusion_date() {
     const month = (now.getMonth()+1).toString().padStart('2',0);
     const year = now.getFullYear().toString().padStart('2',0);
     return `${day}/${month}/${year}`;
+}
+
+function generate_measured_product_code(product_name,unit,selling_price) {
+    let str = ""
+    if(unit  == "kilograms") str = "kg"
+    else str = "g"
+    return `${product_name}str${selling_price}`
 }
 exports.add_product = async(req,res,next)=>{
     try{
@@ -123,7 +131,8 @@ exports.get_products = async (req, res) => {
 
 exports.updatequantity = async(req,res,next)=>{
     try{
-      const {branch_id,business_code,product_code} = req.params; 
+      const {branch_id,business_code} = req.params; 
+      const {product_code} = req.query
       const {new_quantity} = req.body 
       if(new_quantity == null || new_quantity < 0) return res.status(400).json({ status:'failure', message:'invalid quantity' });
        const branch_id_obj = mongoose.Types.ObjectId.isValid(branch_id)
@@ -151,7 +160,8 @@ exports.updatequantity = async(req,res,next)=>{
 
 exports.delete_product_information = async(req,res,next)=>{
     try{
-        const {business_code,branch_id,product_code} = req.params;
+        const {business_code,branch_id} = req.params;
+        const {product_code} = req.query
         const branch_id_obj = mongoose.Types.ObjectId.isValid(branch_id)
        ? new mongoose.Types.ObjectId(branch_id)
        : branch_id;
@@ -165,6 +175,44 @@ exports.delete_product_information = async(req,res,next)=>{
             message:'product deleted successfully'
         })
     } catch(error) {
+        res.status(500).json({
+            status:'failure',
+            message:error.message
+        })
+    }
+}
+
+
+exports.add_measured_product = async(req,res,next)=>{
+    try{
+       const {business_code,branchid} = req.params;
+       const {product_name,unit,quantity,cost_price,selling_price} = req.body;
+       const payload = {
+        business_code,
+        branchid,
+        product_name,
+        product_code:generate_measured_product_code(product_name,unit,selling_price),
+        unit,
+        quantity,
+        cost_price,
+        selling_price,
+        date_of_inclusion:compute_inclusion_date()
+       }
+
+         if(!mongoose.Types.ObjectId.isValid(branchid)) {
+            return res.status(400).json({
+                status:'failure',
+                message:'invalid branch id'
+            })
+        }
+        const new_product_data = await Mproduct.create(payload);
+
+        res.status(200).json({
+            status:'success',
+            information:new_product_data
+        })
+
+    }catch(error) {
         res.status(500).json({
             status:'failure',
             message:error.message

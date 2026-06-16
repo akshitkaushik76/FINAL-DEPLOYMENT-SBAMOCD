@@ -1314,56 +1314,57 @@ function Products({ selectedBranch }) {
   };
 
   // ── NEW: Set exact quantity ───────────────────────────────
-  const setExactQuantity = async () => {
+const setExactQuantity = async () => {
     if (!setQtyForm.product_code)  { show("error", "Product code required"); return; }
-    if (!setQtyForm.branch_id)     { show("error", "Branch ID required"); return; }
     if (setQtyForm.new_quantity === "") { show("error", "New quantity required"); return; }
     setLoading(true);
     setSetQtyResult(null);
     try {
-      const r = await fetch(
-        `${API}/update-quantity/${setQtyForm.branch_id}/${selectedBranch?.branch_code?.split("-")[0] || ""}/${setQtyForm.product_code}`,
-        {
-          method:  "PATCH",
-          headers: authHeader(),
-          body:    JSON.stringify({ new_quantity: Number(setQtyForm.new_quantity) }),
-        }
-      );
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.message);
-      show("success", "Quantity updated!");
-      setSetQtyResult(d?.information || d);
-      setSetQtyForm({ product_code:"", branch_id:"", new_quantity:"" });
-      fetchProducts();
+        const branchId  = setQtyForm.branch_id || selectedBranch?._id || "";
+        const bizCode   = selectedBranch?.branch_code?.split("-")[0] || "";
+        // product_code goes as query param — no URL encoding issues
+        const url = `${API}/update-quantity/${branchId}/${bizCode}?product_code=${encodeURIComponent(setQtyForm.product_code)}`;
+        const r = await fetch(url, {
+            method:  "PATCH",
+            headers: authHeader(),
+            body:    JSON.stringify({ new_quantity: Number(setQtyForm.new_quantity) }),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.message);
+        show("success", "Quantity updated!");
+        setSetQtyResult(d?.information || d);
+        setSetQtyForm({ product_code:"", branch_id:"", new_quantity:"" });
+        fetchProducts();
     } catch (e) { show("error", e.message); }
     finally { setLoading(false); }
-  };
-
+};
   // ── NEW: Delete product ───────────────────────────────────
-  const deleteProduct = async () => {
+ const deleteProduct = async () => {
     if (!deleteCode.trim())    { show("error", "Product code required"); return; }
-    if (!deleteBranchId.trim()){ show("error", "Branch ID required"); return; }
     if (deleteConfirm !== deleteCode) {
-      show("error", "Confirmation code does not match — type the product code exactly to confirm deletion");
-      return;
+        show("error", "Confirmation code does not match");
+        return;
     }
     setLoading(true);
     setDeleteResult(null);
     try {
-      const biz = selectedBranch?.branch_code?.split("-")[0] || "";
-      const r = await fetch(
-        `${API}/delete-product/${biz}/${deleteBranchId}/${deleteCode}`,
-        { method:"DELETE", headers:authHeader() }
-      );
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.message);
-      show("success", `Product "${deleteCode}" deleted.`);
-      setDeleteResult(d);
-      setDeleteCode(""); setDeleteBranchId(""); setDeleteConfirm("");
-      fetchProducts();
+        const branchId = deleteBranchId || selectedBranch?._id || "";
+        const bizCode  = selectedBranch?.branch_code?.split("-")[0] || "";
+        // product_code goes as query param
+        const url = `${API}/delete-product/${bizCode}/${branchId}?product_code=${encodeURIComponent(deleteCode)}`;
+        const r = await fetch(url, {
+            method:  "DELETE",
+            headers: authHeader()
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.message);
+        show("success", `Product "${deleteCode}" deleted.`);
+        setDeleteResult(d);
+        setDeleteCode(""); setDeleteBranchId(""); setDeleteConfirm("");
+        fetchProducts();
     } catch (e) { show("error", e.message); }
     finally { setLoading(false); }
-  };
+};
 
   const margin = (cost, sell) => {
     if (!cost || !sell || sell === 0) return "—";
